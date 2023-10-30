@@ -10,18 +10,25 @@ For general information about developing packages, see the Dart guide for
 and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages). 
 -->
+A Flutter package providing a Subject Event Channel that allows seamless communication
+between Flutter and platform-specific code using various types of RxDart Subjects.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
 
-## Features
+ A Flutter package providing a Subject Event Channel that allows seamless communication
+ between Flutter and platform-specific code using various types of RxDart Subjects.
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+ ## Features
+- Create different types of RxDart Subjects for communication with the platform side:
+  - `SubjectEventChannel`: is the base class that is reposible for actual communication granted its 
+  
+  - `BehaviorEventChannel`: Delivers the last event to new subscribers.
+  - `PublishEventChannel`: Publishes events to all subscribers.
+  - `ReplayEventChannel`: Replays a specified number of events to new subscribers.
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+Replace instance of `EventChannel` with one the following implementation `BehaviorSubject`, `PublishSubject`
+ or `ReplaySubject` depending on your scenario and that's it.
 
 ## Usage
 

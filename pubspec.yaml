@@ -1,10 +1,11 @@
 name: rx_event_channel
-description: A starting point for Dart libraries or applications.
+description: Allows communication between Flutter and platform-specific code using various types of RxDart Subjects
 version: 1.0.0
 repository: https://github.com/m7mdra/rx_event_channel
 
 environment:
-  sdk: ^3.1.5
+  sdk: '>=2.19.6 <3.0.0'
+  flutter: ">=2.5.0"
 
 # Add regular dependencies here.
 dependencies:
@@ -12,7 +13,6 @@ dependencies:
     sdk: flutter
   rxdart: ^0.27.7
 dev_dependencies:
-  test: any
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
