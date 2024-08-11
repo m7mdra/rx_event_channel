@@ -109,7 +109,7 @@ final eventChannel = SubjectEventChannel('name', subject)
 
 ## Usage Example
 
-see `example_plugin` project for more comprehensive example .
+see [example_plugin](/example_plugin) project for more comprehensive example .
 
 
 ## License
