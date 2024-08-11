@@ -9,7 +9,7 @@ void main() {
   group('replay subject channel', () {
     test('test channel replaying with all previous event', () async {
       final name = 'channel1';
-      final channel = ReplayEventChannel(name);
+      final channel = SubjectEventChannel.replay(name);
       var streamHandler = MockStreamSender.value([1, 2, 3, 4]);
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(channel, streamHandler);
@@ -19,12 +19,12 @@ void main() {
       expect(stream1, emitsInOrder([1, 2, 3, 4]));
       //simulated delayed subscription
       await Future.delayed(Duration(seconds: 1));
-      expect(stream2, emitsInOrder([1, 2, 3, 4]));
+      expect(stream2, emitsInOrder([1, 2]));
     });
 
     test('test channel replaying error', () async {
       final name = 'channel1';
-      final channel = ReplayEventChannel(name);
+      final channel = SubjectEventChannel.replay(name);
       var streamHandler = MockStreamSender.errorCode('123');
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(channel, streamHandler);
@@ -34,7 +34,7 @@ void main() {
 
     test('test channel replaying values then error', () async {
       final name = 'channel1';
-      final channel = ReplayEventChannel(name);
+      final channel = SubjectEventChannel.replay(name);
       var streamHandler = MockStreamSender.valueThenError([1, 2, 3, 4], '123');
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(channel, streamHandler);

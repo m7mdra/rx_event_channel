@@ -10,7 +10,7 @@ void main() {
   group('publish subject channel', () {
     test('test channel emits latest event', () async {
       final name = 'channel1';
-      final channel = PublishEventChannel(name);
+      final channel = SubjectEventChannel.publish(name);
       final streamHandler = MockStreamSender.value([1, 2, 3, 4]);
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(channel, streamHandler);
@@ -25,7 +25,7 @@ void main() {
 
     test('test channel replaying error', () async {
       final name = 'channel1';
-      final channel = PublishEventChannel(name);
+      final channel = SubjectEventChannel.publish(name);
       var streamHandler = MockStreamSender.errorCode('123');
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(channel, streamHandler);

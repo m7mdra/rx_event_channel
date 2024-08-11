@@ -4,17 +4,52 @@ import 'package:rxdart/rxdart.dart';
 
 /// An abstract class representing a subject event channel for asynchronous
 /// communication between Flutter and platform-specific code.
-abstract class SubjectEventChannel implements EventChannel {
+class SubjectEventChannel implements EventChannel {
+  final Subject subject;
+  final int? maxSize;
+  final bool sync;
+
   /// Creates a [SubjectEventChannel] with the specified channel [name].
-  ///
+  /// and a [Subject]
   /// Optionally, a custom [codec] can be provided for encoding/decoding method
   /// calls, and a [binaryMessenger] can be specified for communication. If
   /// [binaryMessenger] is not provided, it will attempt to find an appropriate
   /// messenger using [_findBinaryMessenger].
-  const SubjectEventChannel(this.name,
-      [this.codec = const StandardMethodCodec(),
-      BinaryMessenger? binaryMessenger])
-      : _binaryMessenger = binaryMessenger;
+  const SubjectEventChannel(
+    this.name,
+    this.subject, {
+    this.codec = const StandardMethodCodec(),
+    this.maxSize,
+    BinaryMessenger? binaryMessenger,
+  })  : _binaryMessenger = binaryMessenger,
+        sync = false;
+
+  SubjectEventChannel.behavior(
+    this.name, {
+    this.sync = false,
+    this.codec = const StandardMethodCodec(),
+    BinaryMessenger? binaryMessenger,
+  })  : _binaryMessenger = binaryMessenger,
+        subject = BehaviorSubject(sync: sync),
+        maxSize = null;
+
+  SubjectEventChannel.replay(
+    this.name, {
+    this.sync = false,
+    this.maxSize,
+    this.codec = const StandardMethodCodec(),
+    BinaryMessenger? binaryMessenger,
+  })  : _binaryMessenger = binaryMessenger,
+        subject = ReplaySubject(maxSize: maxSize, sync: sync);
+
+  SubjectEventChannel.publish(
+    this.name, {
+    this.sync = false,
+    this.codec = const StandardMethodCodec(),
+    BinaryMessenger? binaryMessenger,
+  })  : _binaryMessenger = binaryMessenger,
+        subject = PublishSubject(sync: sync),
+        maxSize = null;
 
   /// The name of the event channel.
   @override
@@ -22,29 +57,15 @@ abstract class SubjectEventChannel implements EventChannel {
 
   /// The method codec used for encoding/decoding method calls.
   @override
+  @protected
   final MethodCodec codec;
 
   /// The binary messenger responsible for sending/receiving messages.
   @override
+  @protected
   BinaryMessenger get binaryMessenger =>
       _binaryMessenger ?? _findBinaryMessenger();
   final BinaryMessenger? _binaryMessenger;
-
-  /// Creates a new subject to manage events received from the platform.
-  ///
-  /// The [maxSize] parameter specifies the maximum size of the subject's buffer.
-  /// This parameter only applies when using a [ReplaySubject]. If [maxSize] is
-  /// provided and a [ReplaySubject] is created, it limits the number of previous
-  /// events that are replayed to new subscribers.
-  ///
-  /// The [onListen] callback is invoked when a listener subscribes to the stream,
-  /// and [onCancel] is called when the last listener unsubscribes. If [sync] is
-  /// true, events are broadcast synchronously.
-  Subject<dynamic> newSubject(
-      {int? maxSize,
-      void Function()? onListen,
-      void Function()? onCancel,
-      bool sync = false});
 
   /// Receives a broadcast stream of events from the platform.
   ///
@@ -54,16 +75,15 @@ abstract class SubjectEventChannel implements EventChannel {
   @override
   Stream<dynamic> receiveBroadcastStream([dynamic arguments]) {
     final MethodChannel methodChannel = MethodChannel(name, codec);
-    late Subject controller;
-    controller = newSubject(onListen: () async {
+    subject.onListen = () async {
       binaryMessenger.setMessageHandler(name, (ByteData? reply) async {
         if (reply == null) {
-          controller.close();
+          subject.close();
         } else {
           try {
-            controller.add(codec.decodeEnvelope(reply));
+            subject.add(codec.decodeEnvelope(reply));
           } on PlatformException catch (e) {
-            controller.addError(e);
+            subject.addError(e);
           }
         }
         return null;
@@ -79,7 +99,8 @@ abstract class SubjectEventChannel implements EventChannel {
               'while activating platform stream on channel $name'),
         ));
       }
-    }, onCancel: () async {
+    };
+    subject.onCancel = () async {
       binaryMessenger.setMessageHandler(name, null);
       try {
         await methodChannel.invokeMethod<void>('cancel', arguments);
@@ -92,8 +113,9 @@ abstract class SubjectEventChannel implements EventChannel {
               'while de-activating platform stream on channel $name'),
         ));
       }
-    });
-    return controller.stream;
+    };
+
+    return subject.stream;
   }
 
   /// Determines the appropriate [BinaryMessenger] instance based on the runtime context.

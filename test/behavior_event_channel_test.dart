@@ -10,7 +10,8 @@ void main() {
   group('behavior subject channel', () {
     test('test channel emit latest event', () async {
       final name = 'channel1';
-      final channel = BehaviorEventChannel(name);
+      final channel = SubjectEventChannel.behavior(name);
+
       final streamHandler = MockStreamSender.value([1, 2, 3, 4]);
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(channel, streamHandler);
@@ -25,7 +26,7 @@ void main() {
 
     test('test channel emit error event', () async {
       final name = 'channel1';
-      final channel = BehaviorEventChannel(name);
+      final channel = SubjectEventChannel.behavior(name);
       final streamHandler = MockStreamSender.errorCode('123');
       TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(channel, streamHandler);
