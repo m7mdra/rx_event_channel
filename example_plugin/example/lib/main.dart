@@ -23,14 +23,16 @@ class _MyAppState extends State<MyApp> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme:
+          ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.green)),
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
           bottom: TabBar(
             tabs: const [
-              Tab(text: 'Behavior EC'),
-              Tab(text: 'Publish EC'),
-              Tab(text: 'Replay EC'),
+              Tab(text: 'Behavior'),
+              Tab(text: 'Publish'),
+              Tab(text: 'Replay'),
             ],
             controller: _tabController,
             onTap: (tab) {
@@ -78,18 +80,29 @@ class _SubjectConsumerWidgetState extends State<SubjectConsumerWidget>
     with AutomaticKeepAliveClientMixin {
   final list = <int>[];
   StreamSubscription<int>? subscription;
+  final _scrollController = ScrollController();
+  bool started = false;
 
   void subscribe() {
     subscription = widget.stream.listen((newData) {
       setState(() {
+        started = true;
         list.add(newData);
       });
     });
   }
 
+  void unsubscribe() {
+    setState(() {
+      list.clear();
+      started = false;
+    });
+    subscription?.cancel();
+  }
+
   @override
   void dispose() {
-    subscription?.cancel();
+    unsubscribe();
     super.dispose();
   }
 
@@ -100,38 +113,68 @@ class _SubjectConsumerWidgetState extends State<SubjectConsumerWidget>
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          _title(context),
-          _subtitle(context),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton(
-                    onPressed: () {
-                      subscribe();
-                    },
-                    child: const Text('Subscribe')),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _title(context),
+                      const Spacer(),
+                      Text(
+                        '${list.length} Events',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      )
+                    ],
+                  ),
+                  _subtitle(context),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton(
+                            onPressed: started
+                                ? null
+                                : () {
+                                    subscribe();
+                                  },
+                            child: const Text('Subscribe')),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilledButton(
+                            onPressed: started
+                                ? () {
+                                    setState(() {
+                                      unsubscribe();
+                                    });
+                                  }
+                                : null,
+                            child: const Text('Cancel')),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton(
-                    onPressed: () {
-                      setState(() {
-                        subscription?.cancel();
-                        setState(() {
-                          list.clear();
-                        });
-                      });
-                    },
-                    child: const Text('cancel')),
-              ),
-            ],
+            ),
           ),
           Flexible(
             child: ListView.builder(
+              padding: const EdgeInsets.only(top: 16),
+              controller: _scrollController,
               itemCount: list.length,
               itemBuilder: (context, index) {
-                return Text("item${list[index]}");
+                return ListTile(
+                  title: Text("item ${list[index]}"),
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.grey.withOpacity(0.5)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                );
               },
             ),
           ),
@@ -163,11 +206,13 @@ class _SubjectConsumerWidgetState extends State<SubjectConsumerWidget>
     String text;
     switch (widget.type) {
       case ConsumerType.behavior:
-        text = 'Return only the last event ';
+        text = 'Emits the item most recently emitted by the platform';
       case ConsumerType.publish:
-        text = 'Return only the new event';
+        text =
+            'Emits only those items that are emitted by the platform subsequent to the time of the subscription. ';
       case ConsumerType.replay:
-        text = 'Return All event';
+        text =
+            'Emits All event that were emitted by platform regardless of when the subscription starts.';
     }
     return Text(
       text,
