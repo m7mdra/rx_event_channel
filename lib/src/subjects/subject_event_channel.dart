@@ -2,13 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 
-
-
-
-
 /// An abstract class representing a subject event channel for asynchronous
 /// communication between Flutter and platform-specific code.
-abstract class SubjectEventChannel {
+abstract class SubjectEventChannel implements EventChannel {
   /// Creates a [SubjectEventChannel] with the specified channel [name].
   ///
   /// Optionally, a custom [codec] can be provided for encoding/decoding method
@@ -17,16 +13,19 @@ abstract class SubjectEventChannel {
   /// messenger using [_findBinaryMessenger].
   const SubjectEventChannel(this.name,
       [this.codec = const StandardMethodCodec(),
-        BinaryMessenger? binaryMessenger])
+      BinaryMessenger? binaryMessenger])
       : _binaryMessenger = binaryMessenger;
 
   /// The name of the event channel.
+  @override
   final String name;
 
   /// The method codec used for encoding/decoding method calls.
+  @override
   final MethodCodec codec;
 
   /// The binary messenger responsible for sending/receiving messages.
+  @override
   BinaryMessenger get binaryMessenger =>
       _binaryMessenger ?? _findBinaryMessenger();
   final BinaryMessenger? _binaryMessenger;
@@ -43,15 +42,16 @@ abstract class SubjectEventChannel {
   /// true, events are broadcast synchronously.
   Subject<dynamic> newSubject(
       {int? maxSize,
-        void Function()? onListen,
-        void Function()? onCancel,
-        bool sync = false});
+      void Function()? onListen,
+      void Function()? onCancel,
+      bool sync = false});
 
   /// Receives a broadcast stream of events from the platform.
   ///
   /// Optionally, [arguments] can be passed to the platform method.
   /// This method establishes a communication channel with the platform and
   /// returns a stream of events received from the platform.
+  @override
   Stream<dynamic> receiveBroadcastStream([dynamic arguments]) {
     final MethodChannel methodChannel = MethodChannel(name, codec);
     late Subject controller;
@@ -109,6 +109,4 @@ abstract class SubjectEventChannel {
         ? BackgroundIsolateBinaryMessenger.instance
         : ServicesBinding.instance.defaultBinaryMessenger;
   }
-
 }
-
