@@ -3,8 +3,9 @@ description: Allows communication between Flutter and platform-specific code usi
 version: 1.0.0
 repository: https://github.com/m7mdra/rx_event_channel
 
+
 environment:
-  sdk: '>=2.19.6 <3.0.0'
+  sdk: '>=2.19.6 <4.0.0'
   flutter: ">=2.5.0"
 
 # Add regular dependencies here.
