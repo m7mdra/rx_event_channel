@@ -92,7 +92,7 @@ final eventChannel = SubjectEventChannel('name', subject);
 
 ## Usage Example
 
-see [example_plugin](/example_plugin) project for more comprehensive example .
+see [example](/example) project for more comprehensive example .
 
 ## Add to your project:
 ```ymal  
